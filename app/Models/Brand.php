@@ -8,4 +8,8 @@ use Illuminate\Database\Eloquent\Model;
 class Brand extends Model
 {
     use HasFactory;
+    protected $filable = [
+        'name',
+        'image_path'
+    ];
 }
