@@ -10,6 +10,7 @@ use Illuminate\Support\Facades\Hash;
 use App\Models\Category;
 Use App\Models\Brand;
 use App\Models\Product;
+use App\Models\Cart;
 
 class DatabaseSeeder extends Seeder
 {
