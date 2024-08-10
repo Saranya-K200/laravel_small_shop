@@ -71,15 +71,26 @@ class DatabaseSeeder extends Seeder
                 'qty' => '1000',
                 'alert_stock' => '200'
             ],
-            
-            
-            
         ];
 
         foreach($products as $row)
         {
             Product::create($row);
         }
+
+        $carts = [
+            [
+                 'product_id'=>2,
+                 'customer_id'=>1,
+                 'qty'=>10 
+            ]   
+        ];
+
+        foreach($carts as $row)
+        {
+            cart::create($row);
+        }
+
     }
 
 }
