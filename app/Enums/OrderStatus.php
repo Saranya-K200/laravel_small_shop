@@ -3,9 +3,8 @@
 namespace App\Enums;
 
 enum OrderStatus: string
-
 {
-    case APPOINMENT = 'APPOINTMENT';
+    case APPOINTMENT = 'APPOINTMENT';
     case PLACE_AN_ORDER ='PLACE AN ORDER';
     case FINISHING ='FINISHING';
     case DELIVERY ='DELIVERY';

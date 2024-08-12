@@ -4,6 +4,10 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
+
+use App\Enums\OrderStatus;
+use App\Enums\PaymentMethod;
+
 return new class extends Migration
 {
     /**
@@ -19,7 +23,7 @@ return new class extends Migration
             $table->timestamp('order_date')->usecurrent();
             $table->decimal('total_amount',10,2);
             $table->string('order_status')->default(OrderStatus::APPOINTMENT);
-            $TABLE->string('payment_method')->default(PaymentMethod::CASH);
+            $table->string('payment_method')->default(PaymentMethod::CASH);
 
 
             $table->timestamps();
