@@ -18,6 +18,23 @@ class Order extends Model
         'payment_method'
     ];
 
+    protected $dates =['order_date'];
+    
+    public function customer()
+    { 
+     return $this->belongsTo (user::class);
+    }
+    public function orderItems()
+    {
+     return$this->hasmany(OrderItem::class);
+    }
+    public function product()
+    {
+     return $this->BelongsTomany(product::class,'order_items');
+    }
+     
+        
+    }
+    
 
 
-}
