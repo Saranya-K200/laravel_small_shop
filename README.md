@@ -93,7 +93,18 @@ Ensure you have visual studio code installed. You can download it from [vs code]
     php artisan make:filament-resource Order --generate
     ```    
 
-   9. **generate order item resource**
+9. **generate order item resource**
     ```
     php artisan make:filament-resource OrderItem --generate
     ``` 
+
+[dom pdf Library](https://github.com/dompdf/dompdf)
+```
+composer require dompdf/dompdf
+```
+
+4. **generate invoice controller**
+```
+php artisan make:controller InvoiceController
+```
+
