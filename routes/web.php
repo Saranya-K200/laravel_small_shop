@@ -5,6 +5,6 @@ use Illuminate\Support\Facades\Route;
 Route::get('/', function () {
     return view('welcome');
 });
-use App\http\Controllers\HomeController;
+use App\Http\Controllers\WelcomeEmailController;
 
-Route::get('/thirumal',[HomeController::class, 'sendEmailManually'])->name('home.sendEmailManually');
+Route::get('/send-welcome-email', [WelcomeEmailController::class, 'index']);
