@@ -13,6 +13,16 @@ use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
 
+use Filament\Forms\Get;
+use Filament\Forms\Set;
+
+use Filament\Infolists\Infolist;
+use Filament\Infolists\Components\TextEntry;
+use Filament\Infolists\Components\RepeatableEntry;
+
+use App\Enums\OrderStatus;
+use App\Enums\PaymentMethod;
+
 class OrderResource extends Resource
 {
     protected static ?string $model = Order::class;
@@ -23,13 +33,14 @@ class OrderResource extends Resource
     {
         return $form
             ->schema([
-                Forms\Components\TextInput::make('customer_id')
+                Forms\Components\Select::make('customer_id')
                     ->required()
-                    ->numeric(),
+                    ->relationship('customer','name'),
                 Forms\Components\TextInput::make('order_number')
                     ->required()
                     ->maxLength(255),
                 Forms\Components\DateTimePicker::make('order_date')
+                    ->default(now())
                     ->required(),
                 Forms\Components\TextInput::make('total_amount')
                     ->required()
@@ -42,6 +53,55 @@ class OrderResource extends Resource
                     ->required()
                     ->maxLength(255)
                     ->default('CASH'),
+                    Forms\Components\Repeater::make('orderItems')
+                    ->relationship()
+                    ->columnSpanFull()
+                    ->columns(5)
+                    ->schema([
+                    Forms\Components\Select::make('product_id')
+                    ->relationship('product','name')
+                    ->required(),
+                    Forms\Components\TextInput::make('qty')
+                    ->required()
+                    ->numeric(),
+                    Forms\Components\TextInput::make('unit_price')
+                    ->required()
+                    ->numeric()
+                    ->live(debounce:500)
+                    ->afterStateUpdated(function(Set $set, Get $get){
+                        $qty = (int) $get('qty');
+                               
+                        $unit_price = (int) $get('unit_price');
+                       
+                        $amount = $qty * $unit_price;
+                       
+                        $set('amount', $amount);
+
+                    }),
+                Forms\Components\TextInput::make('discount')
+                    ->required()
+                    ->numeric()
+                    ->default(0)
+                    ->live(debounce: 500)
+                    ->afterStateUpdated(function (Set $set, Get $get) {
+                        
+                        $qty = (int) $get('qty');
+                        
+                        $unit_price = (int) $get('unit_price');
+                        
+                        $discount = (int) $get('discount');
+                        
+                        $amount = $qty * $unit_price;
+                        
+                        if ($discount > 0) 
+                        {
+                            $amount -= ($amount * $discount / 100);
+                        }
+                        
+                        $set('amount', $amount);
+                    }),
+
+                ]),
             ]);
     }
 
@@ -49,7 +109,7 @@ class OrderResource extends Resource
     {
         return $table
             ->columns([
-                Tables\Columns\TextColumn::make('customer_id')
+                Tables\Columns\TextColumn::make('customer.name')
                     ->numeric()
                     ->sortable(),
                 Tables\Columns\TextColumn::make('order_number')
