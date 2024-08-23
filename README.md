@@ -102,7 +102,10 @@ Ensure you have visual studio code installed. You can download it from [vs code]
 ```
 composer require dompdf/dompdf
 ```
-
+3. **dom pdf**
+    ```
+    composer require barryvdh/laravel-dompdf
+    ```
 4. **generate invoice controller**
 ```
 php artisan make:controller InvoiceController
