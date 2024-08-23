@@ -45,15 +45,16 @@ class OrderResource extends Resource
                 Forms\Components\TextInput::make('total_amount')
                     ->required()
                     ->numeric(),
-                Forms\Components\TextInput::make('order_status')
+                Forms\Components\Select::make('order_status')
                     ->required()
-                    ->maxLength(255)
+                    ->options(OrderStatus::class)
                     ->default('APPOINTMENT'),
-                Forms\Components\TextInput::make('payment_method')
+                Forms\Components\Select::make('payment_method')
                     ->required()
-                    ->maxLength(255)
+                    ->options(PaymentMethod::class)
                     ->default('CASH'),
-                    Forms\Components\Repeater::make('orderItems')
+
+                Forms\Components\Repeater::make('orderItems')
                     ->relationship()
                     ->columnSpanFull()
                     ->columns(5)
@@ -98,9 +99,14 @@ class OrderResource extends Resource
                             $amount -= ($amount * $discount / 100);
                         }
                         
+                        
                         $set('amount', $amount);
                     }),
 
+                    Forms\Components\TextInput::make('amount')
+                        ->required()
+                        ->numeric(),
+                    
                 ]),
             ]);
     }
@@ -138,6 +144,16 @@ class OrderResource extends Resource
             ])
             ->actions([
                 Tables\Actions\EditAction::make(),
+                Tables\Actions\ViewAction::make(),
+                Tables\Actions\Action::make('View invoice')
+                    ->url(fn (Order $record): string => route('invoice.stream-pdf', $record->id))
+                    ->openUrlInNewTab(),
+                Tables\Actions\Action::make('Download invoice')
+                    ->url(fn (Order $record): string => route('invoice.download-pdf', $record->id))
+                    ->openUrlInNewTab(),
+                Tables\Actions\Action::make('Email invoice')
+                    ->url(fn (Order $record): string => route('invoice.send-email', $record->id))
+                    ->openUrlInNewTab(),
             ])
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([
