@@ -13,6 +13,8 @@ use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
 
+use App\Models\Product;
+
 use Filament\Forms\Get;
 use Filament\Forms\Set;
 
@@ -61,10 +63,33 @@ class OrderResource extends Resource
                     ->schema([
                     Forms\Components\Select::make('product_id')
                     ->relationship('product','name')
+                    ->live(debounce:500)
+                    ->afterStateUpdated(function(Set $set, Get $get){
+
+                        $product = Product::where('id', $get('product_id'))->first();
+
+                        // dd($product);
+
+                        $unit_price = $product->price;
+
+                        $set('unit_price', $unit_price);
+
+                    })
                     ->required(),
                     Forms\Components\TextInput::make('qty')
                     ->required()
-                    ->numeric(),
+                    ->numeric()
+                    ->live(debounce:500)
+                    ->afterStateUpdated(function(Set $set, Get $get){
+                        $qty = (int) $get('qty');
+                               
+                        $unit_price = (int) $get('unit_price');
+                       
+                        $amount = $qty * $unit_price;
+                       
+                        $set('amount', $amount);
+
+                    }),
                     Forms\Components\TextInput::make('unit_price')
                     ->required()
                     ->numeric()
