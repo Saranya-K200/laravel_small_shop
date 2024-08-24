@@ -44,18 +44,24 @@ class OrderResource extends Resource
                 Forms\Components\DateTimePicker::make('order_date')
                     ->default(now())
                     ->required(),
-                Forms\Components\TextInput::make('total_amount')
-                    ->required()
-                    ->numeric(),
                 Forms\Components\Select::make('order_status')
                     ->required()
                     ->options(OrderStatus::class)
                     ->default('APPOINTMENT'),
                 Forms\Components\Select::make('payment_method')
                     ->required()
+                    ->live()
                     ->options(PaymentMethod::class)
                     ->default('CASH'),
-
+                Forms\Components\TextInput::make('total_amount')
+                    ->required()
+                    ->numeric()
+                    ->default(100)
+                    ->live(debounce:500)
+                    ->afterStateUpdated(function(Set $set, Get $get){
+                        // $set('order_number', $get('total_amount'));
+                    })
+                    ->disabled(),
                 Forms\Components\Repeater::make('orderItems')
                     ->relationship()
                     ->columnSpanFull()
@@ -70,69 +76,52 @@ class OrderResource extends Resource
 
                         // dd($product);
 
-                        $unit_price = $product->price;
-
+                        $unit_price = $product ? $product->price : 0;
+                        
                         $set('unit_price', $unit_price);
+                        
+                        // dd($get('../../payment_method'));                    
+                        
+                        self::updateOrderItemAmount($set, $get);
+                        self::updateOrderTotal($set, $get);
 
                     })
                     ->required(),
                     Forms\Components\TextInput::make('qty')
                     ->required()
                     ->numeric()
+                    ->default(1)
                     ->live(debounce:500)
                     ->afterStateUpdated(function(Set $set, Get $get){
-                        $qty = (int) $get('qty');
-                               
-                        $unit_price = (int) $get('unit_price');
-                       
-                        $amount = $qty * $unit_price;
-                       
-                        $set('amount', $amount);
-
+                        self::updateOrderItemAmount($set, $get);
+                        // self::updateOrderTotal($set, $get);
                     }),
                     Forms\Components\TextInput::make('unit_price')
                     ->required()
                     ->numeric()
+                    ->disabled()
                     ->live(debounce:500)
                     ->afterStateUpdated(function(Set $set, Get $get){
-                        $qty = (int) $get('qty');
-                               
-                        $unit_price = (int) $get('unit_price');
-                       
-                        $amount = $qty * $unit_price;
-                       
-                        $set('amount', $amount);
-
+                        self::updateOrderItemAmount($set, $get);
+                        // self::updateOrderTotal($set, $get);
                     }),
-                Forms\Components\TextInput::make('discount')
+                    Forms\Components\TextInput::make('discount')
                     ->required()
                     ->numeric()
                     ->default(0)
                     ->live(debounce: 500)
                     ->afterStateUpdated(function (Set $set, Get $get) {
                         
-                        $qty = (int) $get('qty');
-                        
-                        $unit_price = (int) $get('unit_price');
-                        
-                        $discount = (int) $get('discount');
-                        
-                        $amount = $qty * $unit_price;
-                        
-                        if ($discount > 0) 
-                        {
-                            $amount -= ($amount * $discount / 100);
-                        }
-                        
-                        
-                        $set('amount', $amount);
+                        self::updateOrderItemAmount($set, $get);
+                        // self::updateOrderTotal($set, $get);
                     }),
 
                     Forms\Components\TextInput::make('amount')
                         ->required()
+                        ->disabled()
                         ->numeric(),
                     
-                ]),
+                ])
             ]);
     }
 
@@ -201,5 +190,43 @@ class OrderResource extends Resource
             'create' => Pages\CreateOrder::route('/create'),
             'edit' => Pages\EditOrder::route('/{record}/edit'),
         ];
+    }
+
+    protected static function updateOrderItemAmount(Set $set, Get $get)
+    {
+        $qty = (int) $get('qty');
+        $unit_price = (int) $get('unit_price');
+        $discount = (int) $get('discount');
+
+        $amount = $qty * $unit_price;
+        if ($discount > 0) {
+            $amount -= ($amount * $discount / 100);
+        }
+        $set('amount', $amount);
+    }
+
+    protected static function updateOrderTotal(Set $set, Get $get)
+    {
+        $totalAmount = 0;
+
+        // dd($get('../../total_amount'));
+        // dd($get('../../orderItems'));
+        
+        // Default to an empty array if null
+        $orderItems = $get('../../orderItems') ?? [];
+        
+        // Debugging to check the value of $orderItems
+        // dd($orderItems);
+
+        // Ensure $orderItems is an array before using array_reduce
+        if (is_array($orderItems)) {
+            $total_amount = array_reduce($orderItems, function($carry, $item) {
+                return $carry + ($item['amount'] ?? 0);
+            }, 0);
+            $set('../../total_amount', $total_amount);
+        } else {
+            // Handle the case where $orderItems is not an array
+            $set('../../total_amount', 0);
+        }
     }
 }
